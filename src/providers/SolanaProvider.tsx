@@ -6,12 +6,12 @@ import { storage } from '../utils/storage';
 
 // Conditionally import mobile wallet adapter (not available on web)
 let transact: any = null;
-let Web3MobileWallet: any = null;
+let any: any = null;
 
 if (Platform.OS !== 'web') {
   const mwa = require('@solana-mobile/mobile-wallet-adapter-protocol-web3js');
   transact = mwa.transact;
-  Web3MobileWallet = mwa.Web3MobileWallet;
+  any = mwa.any;
 }
 
 const RPC_ENDPOINT = 'https://api.mainnet-beta.solana.com';
@@ -201,7 +201,7 @@ export function SolanaProvider({ children }: { children: ReactNode }) {
       throw new Error('Wallet not connected');
     }
 
-    const signature = await transact(async (mobileWallet: Web3MobileWallet) => {
+    const signature = await transact(async (mobileWallet: any) => {
       // Reauthorize if needed
       await mobileWallet.authorize({
         cluster: 'mainnet-beta',
@@ -245,7 +245,7 @@ export function SolanaProvider({ children }: { children: ReactNode }) {
       throw new Error('Wallet not connected');
     }
 
-    const signature = await transact(async (mobileWallet: Web3MobileWallet) => {
+    const signature = await transact(async (mobileWallet: any) => {
       await mobileWallet.authorize({
         cluster: 'mainnet-beta',
         identity: APP_IDENTITY,

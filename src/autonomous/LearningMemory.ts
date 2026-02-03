@@ -90,7 +90,7 @@ export class LearningMemory {
       decision.outcome = outcome;
       this.saveToStorage();
 
-      console.log(`[Learning Memory] Updated outcome for ${decisionId}: ${outcome.success ? 'success' : 'failure'}`);
+      console.log(`[Learning Memory] Updated outcome for ${decisionId}: ${outcome?.success ? 'success' : 'failure'}`);
     }
   }
 
