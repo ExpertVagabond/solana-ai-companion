@@ -3,6 +3,8 @@
  * Part of Solana AI Companion for Colosseum Agent Hackathon
  */
 
+import AIProvider, { AnalysisRequest } from '../services/AIProvider';
+
 export interface AIAgent {
   name: string;
   personality: 'conservative' | 'aggressive' | 'balanced' | 'contrarian';
@@ -57,8 +59,10 @@ export interface DebateRound {
 
 export class ConsensusEngine {
   private agents: AIAgent[];
+  private aiProvider: AIProvider | null;
+  private useRealAI: boolean;
 
-  constructor() {
+  constructor(aiProvider?: AIProvider) {
     this.agents = [
       {
         name: 'Claude',
@@ -81,6 +85,16 @@ export class ConsensusEngine {
         provider: 'doubao'
       }
     ];
+
+    this.aiProvider = aiProvider || null;
+    this.useRealAI = !!aiProvider;
+
+    if (this.useRealAI) {
+      console.log('[Consensus Engine] Initialized with real AI providers:',
+        aiProvider!.getAvailableProviders().join(', '));
+    } else {
+      console.log('[Consensus Engine] Initialized with simulated AI (mock mode)');
+    }
   }
 
   /**
@@ -123,17 +137,78 @@ export class ConsensusEngine {
    * Collect opinions from all AI agents
    */
   private async collectOpinions(decision: Decision): Promise<Opinion[]> {
-    // TODO: Integrate with actual AI providers
-    // For now, simulate different agent perspectives
-
     const opinions: Opinion[] = [];
 
-    for (const agent of this.agents) {
-      const opinion = this.simulateAgentOpinion(agent, decision);
-      opinions.push(opinion);
+    if (this.useRealAI && this.aiProvider) {
+      // Use real AI APIs
+      console.log('[Consensus Engine] Collecting real AI opinions...');
+
+      const analysisRequest: AnalysisRequest = {
+        decision: {
+          type: decision.type,
+          description: decision.description,
+          context: decision.context
+        },
+        personality: 'balanced' // Will be overridden per agent
+      };
+
+      // Collect opinions in parallel
+      const results = await this.aiProvider.analyzeWithAll(analysisRequest);
+
+      // Map results to opinions
+      if (results.claude) {
+        opinions.push(this.mapAnalysisToOpinion(this.agents[0], results.claude));
+      } else {
+        opinions.push(this.simulateAgentOpinion(this.agents[0], decision));
+      }
+
+      if (results.gpt) {
+        opinions.push(this.mapAnalysisToOpinion(this.agents[1], results.gpt));
+      } else {
+        opinions.push(this.simulateAgentOpinion(this.agents[1], decision));
+      }
+
+      if (results.gemini) {
+        opinions.push(this.mapAnalysisToOpinion(this.agents[2], results.gemini));
+      } else {
+        opinions.push(this.simulateAgentOpinion(this.agents[2], decision));
+      }
+
+      if (results.doubao) {
+        opinions.push(this.mapAnalysisToOpinion(this.agents[3], results.doubao));
+      } else {
+        opinions.push(this.simulateAgentOpinion(this.agents[3], decision));
+      }
+
+      if (results.errors.length > 0) {
+        console.warn('[Consensus Engine] Some AI APIs failed:', results.errors);
+      }
+    } else {
+      // Use simulated opinions (mock mode)
+      console.log('[Consensus Engine] Using simulated opinions (no AI provider)');
+
+      for (const agent of this.agents) {
+        const opinion = this.simulateAgentOpinion(agent, decision);
+        opinions.push(opinion);
+      }
     }
 
     return opinions;
+  }
+
+  /**
+   * Map AI analysis response to opinion format
+   */
+  private mapAnalysisToOpinion(agent: AIAgent, analysis: any): Opinion {
+    return {
+      agent,
+      stance: analysis.stance,
+      confidence: analysis.confidence,
+      reasoning: analysis.reasoning,
+      risks: analysis.risks,
+      benefits: analysis.benefits,
+      recommendation: analysis.recommendation
+    };
   }
 
   /**
