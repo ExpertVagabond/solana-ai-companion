@@ -5,6 +5,7 @@
 
 import { Connection, PublicKey } from '@solana/web3.js';
 import KaminoProvider from '../services/KaminoProvider';
+import DriftProvider from '../services/DriftProvider';
 
 export interface Opportunity {
   id: string;
@@ -52,6 +53,7 @@ export interface UserProfile {
 export class OpportunityScanner {
   private connection: Connection;
   private kaminoProvider: KaminoProvider;
+  private driftProvider: DriftProvider;
   private scanInterval: NodeJS.Timeout | null = null;
   private lastScan: Date | null = null;
   private cachedOpportunities: Opportunity[] = [];
@@ -60,6 +62,7 @@ export class OpportunityScanner {
   constructor(rpcUrl: string, useRealData: boolean = false) {
     this.connection = new Connection(rpcUrl, 'confirmed');
     this.kaminoProvider = new KaminoProvider(rpcUrl);
+    this.driftProvider = new DriftProvider(rpcUrl);
     this.useRealData = useRealData;
 
     console.log(`[Opportunity Scanner] Initialized (${useRealData ? 'REAL DATA' : 'MOCK DATA'} mode)`);
@@ -248,8 +251,56 @@ export class OpportunityScanner {
    * Scan Drift perpetuals funding rates
    */
   private async scanDrift(): Promise<Opportunity[]> {
-    // TODO: Integrate with @drift-labs/sdk
     console.log('[Opportunity Scanner] Scanning Drift...');
+
+    if (this.useRealData) {
+      try {
+        // Use real Drift data
+        const driftOpps = await this.driftProvider.getFundingOpportunities();
+
+        return driftOpps.map(opp => ({
+          id: `drift-${opp.market.toLowerCase().replace('-perp', '')}`,
+          protocol: 'Drift',
+          type: 'perpetuals',
+          asset: opp.market,
+          apy: opp.apy,
+          tvl: opp.liquidity,
+          risk: opp.risk,
+          liquidity: opp.liquidity,
+          minDeposit: opp.minCollateral,
+          lockPeriod: 0,
+          executionSteps: [
+            'Connect wallet',
+            'Deposit USDC as collateral',
+            `Open ${opp.direction} ${opp.market} position`,
+            'Collect funding payments'
+          ],
+          estimatedReturn: {
+            daily: opp.apy / 365,
+            weekly: (opp.apy / 365) * 7,
+            monthly: (opp.apy / 365) * 30,
+            yearly: opp.apy
+          },
+          metadata: {
+            url: 'https://app.drift.trade/',
+            description: opp.description,
+            lastUpdated: new Date()
+          }
+        }));
+      } catch (error) {
+        console.error('[Opportunity Scanner] Drift real data failed, falling back to mock:', error);
+        return this.getDriftMockData();
+      }
+    }
+
+    return this.getDriftMockData();
+  }
+
+  /**
+   * Get mock Drift data (fallback)
+   */
+  private getDriftMockData(): Opportunity[] {
+    console.log('[Opportunity Scanner] Using Drift mock data...');
 
     const mockOpportunities: Opportunity[] = [
       {

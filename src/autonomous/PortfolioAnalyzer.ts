@@ -4,6 +4,7 @@
  */
 
 import { Connection, PublicKey } from '@solana/web3.js';
+import PythProvider from '../services/PythProvider';
 
 export interface TokenBalance {
   mint: string;
@@ -41,10 +42,16 @@ export interface Recommendation {
 
 export class PortfolioAnalyzer {
   private connection: Connection;
+  private pythProvider: PythProvider;
   private updateInterval: NodeJS.Timeout | null = null;
+  private useRealPrices: boolean;
 
-  constructor(rpcUrl: string) {
+  constructor(rpcUrl: string, useRealPrices: boolean = false) {
     this.connection = new Connection(rpcUrl, 'confirmed');
+    this.pythProvider = new PythProvider(rpcUrl);
+    this.useRealPrices = useRealPrices;
+
+    console.log(`[Portfolio Analyzer] Initialized (${useRealPrices ? 'REAL PRICES' : 'MOCK PRICES'})`);
   }
 
   /**
