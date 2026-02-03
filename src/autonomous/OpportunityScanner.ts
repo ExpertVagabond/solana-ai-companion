@@ -18,6 +18,7 @@ export interface Opportunity {
   liquidity: number; // USD available for this opportunity
   minDeposit: number; // Minimum deposit in USD
   lockPeriod: number; // Lock period in days (0 = no lock)
+  description: string; // Human-readable description
   executionSteps: string[];
   estimatedReturn: {
     daily: number;
@@ -149,6 +150,7 @@ export class OpportunityScanner {
           liquidity: opp.liquidity,
           minDeposit: opp.minDeposit,
           lockPeriod: 0,
+          description: `Lend ${opp.asset} on Kamino ${opp.market} for ${opp.apy.toFixed(2)}% APY`,
           executionSteps: [
             'Connect wallet',
             `Approve ${opp.asset}`,
@@ -195,6 +197,7 @@ export class OpportunityScanner {
         liquidity: 5000000,
         minDeposit: 10,
         lockPeriod: 0,
+        description: 'Lend USDC on Kamino Main Market for 8.50% APY',
         executionSteps: [
           'Connect wallet',
           'Approve USDC',
@@ -224,6 +227,7 @@ export class OpportunityScanner {
         liquidity: 8000000,
         minDeposit: 0.1,
         lockPeriod: 0,
+        description: 'Lend SOL on Kamino Main Market for 6.20% APY',
         executionSteps: [
           'Connect wallet',
           'Deposit SOL to Kamino',
@@ -269,6 +273,7 @@ export class OpportunityScanner {
           liquidity: opp.liquidity,
           minDeposit: opp.minCollateral,
           lockPeriod: 0,
+          description: opp.description || `${opp.direction} ${opp.market} for ${opp.apy.toFixed(2)}% funding APY`,
           executionSteps: [
             'Connect wallet',
             'Deposit USDC as collateral',
@@ -314,6 +319,7 @@ export class OpportunityScanner {
         liquidity: 3000000,
         minDeposit: 10,
         lockPeriod: 0,
+        description: 'Earn SOL-PERP funding rate at 12.30% APY on Drift',
         executionSteps: [
           'Connect wallet',
           'Deposit USDC as collateral',
@@ -355,6 +361,7 @@ export class OpportunityScanner {
         liquidity: 12000000,
         minDeposit: 20,
         lockPeriod: 0,
+        description: 'Provide SOL-USDC liquidity on Raydium for 18.50% APY',
         executionSteps: [
           'Connect wallet',
           'Add liquidity (50% SOL, 50% USDC)',
@@ -396,6 +403,7 @@ export class OpportunityScanner {
         liquidity: 50000000,
         minDeposit: 0.01,
         lockPeriod: 0, // Liquid staking
+        description: 'Stake SOL with Marinade for 7.10% APY (liquid staking)',
         executionSteps: [
           'Connect wallet',
           'Stake SOL with Marinade',

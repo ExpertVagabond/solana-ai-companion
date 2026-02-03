@@ -242,7 +242,6 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   balanceCard: {
-    backgroundColor: 'linear-gradient(135deg, #9945FF 0%, #14F195 100%)',
     backgroundColor: '#2a2a4e',
     borderRadius: 16,
     padding: 24,

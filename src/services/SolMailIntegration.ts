@@ -119,27 +119,27 @@ export class SolMailIntegration {
     let letter = `${greeting}\n\n`;
     letter += `${periodText} Portfolio Report - ${date}\n\n`;
     letter += `Portfolio Summary:\n`;
-    letter += `• Total Value: $${metrics.totalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}\n`;
+    letter += `• Total Value: $${metrics.totalValueUSD.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}\n`;
     letter += `• Risk Score: ${metrics.riskScore}/100\n`;
-    letter += `• Number of Assets: ${metrics.holdings.length}\n`;
-    letter += `• Diversification Score: ${metrics.diversificationScore}/100\n\n`;
+    letter += `• Number of Assets: ${metrics.tokenCount}\n`;
+    letter += `• Concentration Score: ${(metrics.concentration * 100).toFixed(0)}/100\n\n`;
 
-    // Top holdings
+    // Top holdings (from allocation)
     letter += `Top Holdings:\n`;
-    const topHoldings = metrics.holdings
-      .sort((a, b) => b.value - a.value)
+    const allocEntries = Object.entries(metrics.allocation)
+      .sort(([, a], [, b]) => b - a)
       .slice(0, 5);
 
-    for (const holding of topHoldings) {
-      const percentage = ((holding.value / metrics.totalValue) * 100).toFixed(1);
-      letter += `• ${holding.symbol}: $${holding.value.toLocaleString('en-US', { minimumFractionDigits: 2 })} (${percentage}%)\n`;
+    for (const [symbol, percentage] of allocEntries) {
+      const value = metrics.totalValueUSD * percentage;
+      letter += `• ${symbol}: $${value.toLocaleString('en-US', { minimumFractionDigits: 2 })} (${(percentage * 100).toFixed(1)}%)\n`;
     }
 
     letter += `\n`;
 
     // Concentration analysis
-    if (metrics.concentrationRisk > 0.7) {
-      letter += `⚠️ Concentration Alert: Your portfolio is heavily concentrated in ${topHoldings[0].symbol}.\n`;
+    if (metrics.concentration > 0.7) {
+      letter += `⚠️ Concentration Alert: Your portfolio is heavily concentrated in ${metrics.dominantToken}.\n`;
       letter += `Consider diversifying to reduce risk.\n\n`;
     }
 
@@ -168,8 +168,8 @@ export class SolMailIntegration {
         letter += `• Your portfolio has a balanced risk profile.\n`;
       }
 
-      if (metrics.diversificationScore < 50) {
-        letter += `• Diversification could be improved by adding more assets.\n`;
+      if (metrics.concentration > 0.5) {
+        letter += `• Concentration is high. Consider adding more assets for diversification.\n`;
       }
 
       letter += `\n`;

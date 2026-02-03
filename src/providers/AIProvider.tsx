@@ -60,7 +60,7 @@ export function AIProvider({ children }: { children: ReactNode }) {
         setSettings(parsed);
         if (parsed.defaultProvider) {
           setCurrentProvider(parsed.defaultProvider);
-          const providerConfig = AI_PROVIDERS[parsed.defaultProvider];
+          const providerConfig = AI_PROVIDERS[parsed.defaultProvider as AIProviderType];
           if (providerConfig.models.length > 0) {
             setCurrentModel(providerConfig.models[0].id);
           }

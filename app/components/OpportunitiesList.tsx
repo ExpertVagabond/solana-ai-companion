@@ -15,7 +15,7 @@ import {
 export interface Opportunity {
   id: string;
   protocol: string;
-  type: 'lending' | 'staking' | 'lp' | 'perpetuals';
+  type: 'lending' | 'staking' | 'lp' | 'perpetuals' | 'arbitrage';
   asset: string;
   apy: number;
   tvl: number;

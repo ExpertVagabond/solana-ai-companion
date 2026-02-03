@@ -141,7 +141,7 @@ export function AutonomousProvider({
   };
 
   const startPortfolioMonitoring = (walletAddress: string) => {
-    portfolioAnalyzer.startMonitoring(walletAddress, 5 * 60 * 1000, async (result) => {
+    portfolioAnalyzer.startMonitoring(walletAddress, async (result) => {
       setState(prev => ({
         ...prev,
         portfolioMetrics: result.metrics,

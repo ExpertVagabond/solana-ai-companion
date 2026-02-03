@@ -151,14 +151,14 @@ export default function MainScreen() {
       const metrics = portfolioMetrics!;
 
       let response = `📊 **Portfolio Analysis**\n\n`;
-      response += `Total Value: $${metrics.totalValue.toLocaleString('en-US', {
+      response += `Total Value: $${metrics.totalValueUSD.toLocaleString('en-US', {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
       })}\n`;
       response += `Risk Score: ${metrics.riskScore}/100 (${
         metrics.riskScore < 30 ? 'Low' : metrics.riskScore < 60 ? 'Medium' : 'High'
       })\n`;
-      response += `Diversification: ${metrics.diversificationScore}/100\n`;
+      response += `Concentration: ${(metrics.concentration * 100).toFixed(0)}/100\n`;
       response += `Top Asset: ${metrics.dominantToken} (${(
         metrics.dominantPercentage * 100
       ).toFixed(1)}%)\n\n`;
@@ -166,7 +166,7 @@ export default function MainScreen() {
       if (portfolioRecommendations.length > 0) {
         response += `**Recommendations:**\n`;
         portfolioRecommendations.slice(0, 3).forEach((rec, i) => {
-          response += `${i + 1}. ${rec.action}: ${rec.reasoning}\n`;
+          response += `${i + 1}. ${rec.action || rec.type}: ${rec.message}\n`;
         });
       }
 
@@ -217,9 +217,9 @@ export default function MainScreen() {
             : alert.severity === 'warning'
             ? '🟡'
             : '🔵';
-        response += `${icon} ${alert.type}: ${alert.message}\n`;
-        if (alert.suggestedAction) {
-          response += `   Action: ${alert.suggestedAction}\n`;
+        response += `${icon} ${alert.ruleId}: ${alert.message}\n`;
+        if (alert.recommendedAction) {
+          response += `   Action: ${alert.recommendedAction}\n`;
         }
         response += `\n`;
       });
@@ -273,19 +273,12 @@ What would you like to do?`;
   // Convert portfolio metrics to dashboard format
   const portfolioStats: PortfolioStats | null = autonomous.portfolioMetrics
     ? {
-        totalValue: autonomous.portfolioMetrics.totalValue,
+        totalValue: autonomous.portfolioMetrics.totalValueUSD,
         change24h: 0, // Would calculate from price history
         change24hPercent: 0,
         riskScore: autonomous.portfolioMetrics.riskScore,
-        diversificationScore: autonomous.portfolioMetrics.diversificationScore,
-        holdings: autonomous.portfolioMetrics.holdings.map(h => ({
-          symbol: h.symbol,
-          amount: h.uiAmount,
-          valueUSD: h.valueUSD || 0,
-          percentageOfPortfolio: h.percentage * 100,
-          priceUSD: h.priceUSD || 0,
-          change24h: 0, // Would fetch from price history
-        })),
+        diversificationScore: (1 - autonomous.portfolioMetrics.concentration) * 100,
+        holdings: [], // Would map from actual token balances
       }
     : null;
 
@@ -301,7 +294,7 @@ What would you like to do?`;
             selectedAI={selectedAI}
             onChangeAI={setSelectedAI}
             walletConnected={walletConnected}
-            portfolioValue={autonomous.portfolioMetrics?.totalValue}
+            portfolioValue={autonomous.portfolioMetrics?.totalValueUSD}
           />
         );
 
