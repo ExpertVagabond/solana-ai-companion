@@ -4,6 +4,7 @@
  */
 
 import { Connection, PublicKey } from '@solana/web3.js';
+import KaminoProvider from '../services/KaminoProvider';
 
 export interface Opportunity {
   id: string;
@@ -50,12 +51,18 @@ export interface UserProfile {
 
 export class OpportunityScanner {
   private connection: Connection;
+  private kaminoProvider: KaminoProvider;
   private scanInterval: NodeJS.Timeout | null = null;
   private lastScan: Date | null = null;
   private cachedOpportunities: Opportunity[] = [];
+  private useRealData: boolean;
 
-  constructor(rpcUrl: string) {
+  constructor(rpcUrl: string, useRealData: boolean = false) {
     this.connection = new Connection(rpcUrl, 'confirmed');
+    this.kaminoProvider = new KaminoProvider(rpcUrl);
+    this.useRealData = useRealData;
+
+    console.log(`[Opportunity Scanner] Initialized (${useRealData ? 'REAL DATA' : 'MOCK DATA'} mode)`);
   }
 
   /**
@@ -121,9 +128,56 @@ export class OpportunityScanner {
    * Scan Kamino lending opportunities
    */
   private async scanKamino(): Promise<Opportunity[]> {
-    // TODO: Integrate with @kamino-finance/klend-sdk
-    // For now, return mock data structure
     console.log('[Opportunity Scanner] Scanning Kamino...');
+
+    if (this.useRealData) {
+      try {
+        // Use real Kamino data
+        const kaminoOpps = await this.kaminoProvider.getLendingOpportunities();
+
+        return kaminoOpps.map(opp => ({
+          id: `kamino-${opp.asset.toLowerCase()}`,
+          protocol: 'Kamino',
+          type: 'lending',
+          asset: opp.asset,
+          apy: opp.apy,
+          tvl: opp.tvl,
+          risk: opp.risk,
+          liquidity: opp.liquidity,
+          minDeposit: opp.minDeposit,
+          lockPeriod: 0,
+          executionSteps: [
+            'Connect wallet',
+            `Approve ${opp.asset}`,
+            `Deposit to Kamino ${opp.market}`,
+            `Receive k${opp.asset} receipt tokens`
+          ],
+          estimatedReturn: {
+            daily: opp.apy / 365,
+            weekly: (opp.apy / 365) * 7,
+            monthly: (opp.apy / 365) * 30,
+            yearly: opp.apy
+          },
+          metadata: {
+            url: 'https://app.kamino.finance/',
+            description: `Lend ${opp.asset} in Kamino ${opp.market}`,
+            lastUpdated: new Date()
+          }
+        }));
+      } catch (error) {
+        console.error('[Opportunity Scanner] Kamino real data failed, falling back to mock:', error);
+        return this.getKaminoMockData();
+      }
+    }
+
+    return this.getKaminoMockData();
+  }
+
+  /**
+   * Get mock Kamino data (fallback)
+   */
+  private async getKaminoMockData(): Promise<Opportunity[]> {
+    console.log('[Opportunity Scanner] Using Kamino mock data...');
 
     // Mock data - will be replaced with actual Kamino SDK integration
     const mockOpportunities: Opportunity[] = [
