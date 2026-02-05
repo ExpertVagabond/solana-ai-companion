@@ -12,6 +12,8 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { name: 'Chat', path: '/', icon: '💬', iconActive: '💬' },
+  { name: 'Portfolio', path: '/portfolio', icon: '📊', iconActive: '📊' },
+  { name: 'Opportunities', path: '/opportunities', icon: '💎', iconActive: '💎' },
   { name: 'History', path: '/history', icon: '📋', iconActive: '📋' },
   { name: 'Settings', path: '/settings', icon: '⚙️', iconActive: '⚙️' },
 ];

@@ -7,6 +7,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { SolanaProvider } from '../src/providers/SolanaProvider';
 import { AIProvider } from '../src/providers/AIProvider';
 import { CreditsProvider } from '../src/providers/CreditsProvider';
+import { AutonomousProvider } from './context/AutonomousContext';
 
 export default function RootLayout() {
   return (
@@ -15,6 +16,7 @@ export default function RootLayout() {
         <SolanaProvider>
           <CreditsProvider>
             <AIProvider>
+            <AutonomousProvider rpcUrl="https://api.mainnet-beta.solana.com">
             <StatusBar style="light" />
             <Stack
               screenOptions={{
@@ -24,9 +26,12 @@ export default function RootLayout() {
               }}
             >
               <Stack.Screen name="index" />
+              <Stack.Screen name="portfolio" />
+              <Stack.Screen name="opportunities" />
               <Stack.Screen name="settings" />
               <Stack.Screen name="history" />
             </Stack>
+            </AutonomousProvider>
             </AIProvider>
           </CreditsProvider>
         </SolanaProvider>
