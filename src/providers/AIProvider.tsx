@@ -153,6 +153,18 @@ export function AIProvider({ children }: { children: ReactNode }) {
   };
 
   const sendMessage = useCallback(async (content: string) => {
+    // Input validation
+    if (!content || typeof content !== 'string') {
+      throw new Error('Message content is required');
+    }
+    const trimmed = content.trim();
+    if (trimmed.length === 0) {
+      throw new Error('Message cannot be empty');
+    }
+    if (trimmed.length > 32_000) {
+      throw new Error('Message exceeds maximum length of 32,000 characters');
+    }
+
     const apiKey = settings.apiKeys[currentProvider];
     if (!apiKey) {
       throw new Error(`Please add your ${AI_PROVIDERS[currentProvider].name} API key in settings`);
@@ -257,11 +269,20 @@ export function AIProvider({ children }: { children: ReactNode }) {
   }, [currentProvider, currentModel, currentConversation, conversations, settings.apiKeys, wallet]);
 
   const updateApiKey = useCallback(async (provider: AIProviderType, key: string) => {
+    // Validate API key format before storing
+    const trimmedKey = key.trim();
+    if (trimmedKey.length > 0 && trimmedKey.length < 10) {
+      throw new Error('API key appears too short to be valid');
+    }
+    if (trimmedKey.length > 500) {
+      throw new Error('API key exceeds maximum length');
+    }
+
     const newSettings = {
       ...settings,
       apiKeys: {
         ...settings.apiKeys,
-        [provider]: key,
+        [provider]: trimmedKey,
       },
     };
     setSettings(newSettings);
