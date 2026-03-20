@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -24,6 +24,28 @@ import { useAI } from '../src/providers/AIProvider';
 import { useSolana } from '../src/providers/SolanaProvider';
 import { useCredits } from '../src/providers/CreditsProvider';
 import { AI_PROVIDERS } from '../src/services/ai-providers';
+
+// ---------------------------------------------------------------------------
+// Security: Input sanitization helpers
+// ---------------------------------------------------------------------------
+const MAX_MESSAGE_LEN = 10_000;
+
+/** Sanitize user chat input before sending to AI provider. */
+function sanitizeInput(text: string): string {
+  if (typeof text !== 'string') return '';
+  // Strip null bytes and control characters
+  let cleaned = text.replace(/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/g, '');
+  // Enforce length limit
+  if (cleaned.length > MAX_MESSAGE_LEN) {
+    cleaned = cleaned.slice(0, MAX_MESSAGE_LEN);
+  }
+  return cleaned.trim();
+}
+
+/** Validate a Solana address format (base58, 32-44 chars). */
+function isValidSolanaAddress(addr: string): boolean {
+  return /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(addr);
+}
 
 export default function ChatScreen() {
   const router = useRouter();
@@ -56,13 +78,16 @@ export default function ChatScreen() {
     }
   }, [currentConversation?.messages.length]);
 
-  const handleSend = async (content: string) => {
+  const handleSend = useCallback(async (content: string) => {
+    const sanitized = sanitizeInput(content);
+    if (!sanitized) return;
     try {
-      await sendMessage(content);
+      await sendMessage(sanitized);
     } catch (error: any) {
-      Alert.alert('Error', error.message || 'Failed to send message');
+      const msg = typeof error?.message === 'string' ? error.message.slice(0, 200) : 'Failed to send message';
+      Alert.alert('Error', msg);
     }
-  };
+  }, [sendMessage]);
 
   const handleNewChat = () => {
     triggerHaptic();
