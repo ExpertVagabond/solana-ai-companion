@@ -1,5 +1,6 @@
 {
   "name": "solana-ai-chat",
+  "author": "Matthew Karsten <matthewkarstenconnects@gmail.com>",
   "version": "1.0.0",
   "description": "Multi-AI Chat App for Solana Seeker with wallet integration",
   "main": "expo-router/entry",
